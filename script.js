@@ -1,5 +1,19 @@
 let currentSong = new Audio();
 
+function secondsToMinutes(seconds) {
+    if (isNaN(seconds) || seconds < 0) {
+        return "00:00";
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+}
+
 async function getSongs(){
     let a = await fetch("http://127.0.0.1:5500/songs/");
     let response = await a.text();
@@ -19,10 +33,16 @@ async function getSongs(){
     return songs;
 }
 
-const playMusic = (track)=>{
-    //let audio = new Audio("/songs/" + track)
+const playMusic = (track, pause = false)=>{
+    
     currentSong.src = "/songs/" + track
-    currentSong.play()
+    if(!pause){
+        currentSong.play()
+        play.src = "pause.svg"
+    }
+
+    document.querySelector(".songinfo").innerHTML = decodeURI(track)
+    document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
 
 }
 
@@ -31,6 +51,7 @@ async function main(){
     
     //Get the list of all the songs
     let songs = await getSongs()
+    playMusic(songs[0], true)
     
 
     //Show all the osngs in the playlist
@@ -69,10 +90,19 @@ async function main(){
     play.addEventListener("click" , () => {
         if(currentSong.paused){
             currentSong.play()
+            play.src = "pause.svg"
         }
         else{
             currentSong.pause()
+            play.src = "play.svg"
         }
+    })
+
+    //Listen for time update event
+    currentSong.addEventListener("timeupdate", ()=> {
+        console.log(currentSong.currentTime, currentSong.duration)
+        document.querySelector(".songtime").innerHTML = `${secondsToMinutes(currentSong.currentTime)} /
+        ${secondsToMinutes(currentSong.duration)}`
     })
 
 }
